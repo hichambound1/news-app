@@ -1,5 +1,54 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import axios from "axios";
+import swal from 'sweetalert';
 const Login = () => {
+    const [email, setEmail] = useState('');
+    const [errormail, setErrormail] = useState('');
+    
+    const [password, setPassword] = useState('');
+
+    const [errorpassword, setErrorpassword] = useState('');
+    
+    const [error, setError] = useState('');
+    
+    const [isloadingsubmit, setIsLoadingsubmit] = useState(false);
+
+    const nav = useNavigate();
+
+    const handleSubmit = e => {        
+        e.preventDefault();
+        setIsLoadingsubmit(true);
+        axios.defaults.withCredentials = true;
+        axios.get('http://127.0.0.1:8000/sanctum/csrf-cookie')
+        .then(response => {
+            axios.post('http://127.0.0.1:8000/api/login', {
+                email: email,
+                password: password,
+            }).then(response => {
+                    setErrormail('')
+                    setErrorpassword('')
+                    setError('')
+                    localStorage.setItem('auth_token',response.data.token)
+                    localStorage.setItem('auth_user', JSON.stringify(response.data.user))
+                    setIsLoadingsubmit(false);
+                    nav('/feed');
+         
+            }).catch(error =>{
+                setIsLoadingsubmit(false);
+
+                if(error.response.status === 401){
+                    swal(error.response.data.message);
+                    setError(error.response.data.message)
+                }
+                if(error.response.data.errors){
+                    setErrormail(error.response.data.errors.email)
+                    setErrorpassword(error.response.data.errors.password)
+                }
+            }
+            )
+        });
+    }
 
     return (
         <>
@@ -16,7 +65,7 @@ const Login = () => {
                             <div className="col-md-6 col-lg-7 d-flex align-items-center">
                             <div className="card-body p-4 p-lg-5 text-black">
 
-                                <form>
+                                <form onSubmit={handleSubmit}>
 
                                 <div className="d-flex align-items-center mb-3 pb-1">
                                     <i className="fas fa-cubes fa-2x me-3" style={{color: "#ff6219"}}></i>
@@ -24,19 +73,34 @@ const Login = () => {
                                 </div>
 
                                 <h5 className="fw-normal mb-3 pb-3" style={{letterSpacing: "1px"}}>Sign into your account</h5>
-
+                                <span className="text-danger">{error}</span>
                                 <div className="form-outline mb-4">
-                                    <label className="form-label" htmlFor="form2Example17">Email address</label>
-                                    <input type="email" id="form2Example17" className="form-control form-control-lg" />
+                                    <label className="form-label" htmlFor="email">Email address</label>
+                                    <input 
+                                        type="email" 
+                                        id="email"
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)} 
+                                        className="form-control form-control-lg" />
+                                        <span className="text-danger">{errormail}</span>
                                 </div>
 
                                 <div className="form-outline mb-4">
-                                    <label className="form-label" htmlFor="form2Example27">Password</label>
-                                    <input type="password" id="form2Example27" className="form-control form-control-lg" />
+                                    <label className="form-label" htmlFor="password">Password</label>
+                                    <input 
+                                        type="password" 
+                                        id="password" 
+                                        
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)} 
+                                        className="form-control form-control-lg" />
+                                        <span className="text-danger">{errorpassword}</span>
                                 </div>
 
                                 <div className="pt-1 mb-4">
-                                    <button className="btn btn-dark btn-lg btn-block" type="button">Login</button>
+                                    <button className="btn btn-dark btn-lg btn-block" disabled={isloadingsubmit} type="submit">
+                                    {isloadingsubmit ? <div className="spinner-border text-info" role="status"></div> : 'Login' }
+                                    </button>
                                 </div>
                                 <p className="mb-5 pb-lg-2" style={{color: "#393f81"}}>Don't have an account? <Link to="/register"
                                     style={{color: "#393f81"}}>Register here</Link> </p> 

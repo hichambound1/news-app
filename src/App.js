@@ -6,6 +6,8 @@ import NotFound from './Pages/NotFound/NotFound';
 import Feed from './Pages/Feed/Feed';
 
 function App() {
+  const token =  localStorage.getItem('auth_token');
+  console.log(token);
   return (
     <Router>
       <div className="h-screen">
