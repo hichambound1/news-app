@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import swal from 'sweetalert';
 const Login = () => {
@@ -15,7 +15,14 @@ const Login = () => {
     const [isloadingsubmit, setIsLoadingsubmit] = useState(false);
 
     const nav = useNavigate();
-
+    useEffect(()=>{
+        const token = localStorage.getItem('auth_token');
+        if(token){
+            nav('/feed');
+        }else{
+            nav('/login');
+        }
+    },[nav])
     const handleSubmit = e => {        
         e.preventDefault();
         setIsLoadingsubmit(true);
